@@ -3,14 +3,12 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-
 from rest_framework.test import APIClient
 
 from .models import Appointment
 
 
 class AppointmentAPITests(TestCase):
-
     def setUp(self):
         self.client = APIClient()
 
@@ -23,9 +21,7 @@ class AppointmentAPITests(TestCase):
         self.valid_data = {
             "patient_name": "Jane Example",
             "patient_email": "jane@example.com",
-            "appointment_date": (
-                timezone.now() + timedelta(days=7)
-            ).isoformat(),
+            "appointment_date": (timezone.now() + timedelta(days=7)).isoformat(),
             "reason": "Routine medical checkup",
             "status": "scheduled",
         }
@@ -34,9 +30,7 @@ class AppointmentAPITests(TestCase):
         response = self.client.get("/api/health/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()["status"], "healthy"
-        )
+        self.assertEqual(response.json()["status"], "healthy")
 
     def test_unauthenticated_access_denied(self):
         response = self.client.get("/api/appointments/")
@@ -59,9 +53,7 @@ class AppointmentAPITests(TestCase):
         self.client.force_authenticate(user=self.staff_user)
 
         data = self.valid_data.copy()
-        data["appointment_date"] = (
-            timezone.now() - timedelta(days=1)
-        ).isoformat()
+        data["appointment_date"] = (timezone.now() - timedelta(days=1)).isoformat()
 
         response = self.client.post(
             "/api/appointments/",
@@ -84,9 +76,7 @@ class AppointmentAPITests(TestCase):
     def test_staff_can_cancel_appointment(self):
         self.client.force_authenticate(user=self.staff_user)
 
-        appointment = Appointment.objects.create(
-            **self.valid_data
-        )
+        appointment = Appointment.objects.create(**self.valid_data)
 
         response = self.client.patch(
             f"/api/appointments/{appointment.id}/",
@@ -112,11 +102,6 @@ class AppointmentAPITests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_appointment_string_representation(self):
-        appointment = Appointment.objects.create(
-            **self.valid_data
-        )
+        appointment = Appointment.objects.create(**self.valid_data)
 
-        self.assertIn(
-            "Jane Example",
-            str(appointment)
-        )
+        self.assertIn("Jane Example", str(appointment))

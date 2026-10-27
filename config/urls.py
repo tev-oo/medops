@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from appointments.views import (
@@ -9,11 +9,7 @@ from appointments.views import (
 
 router = DefaultRouter()
 
-router.register(
-    r"appointments",
-    AppointmentViewSet,
-    basename="appointments"
-)
+router.register(r"appointments", AppointmentViewSet, basename="appointments")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

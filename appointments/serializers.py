@@ -5,7 +5,6 @@ from .models import Appointment
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Appointment
         fields = [
@@ -22,7 +21,5 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
     def validate_appointment_date(self, value):
         if value <= timezone.now():
-            raise serializers.ValidationError(
-                "Appointment date must be in the future."
-            )
+            raise serializers.ValidationError("Appointment date must be in the future.")
         return value

@@ -7,11 +7,9 @@ from .serializers import AppointmentSerializer
 
 
 def health_check(request):
-    return JsonResponse({
-        "status": "healthy",
-        "service": "medops-api",
-        "version": "0.1.0"
-    })
+    return JsonResponse(
+        {"status": "healthy", "service": "medops-api", "version": "0.1.0"}
+    )
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
