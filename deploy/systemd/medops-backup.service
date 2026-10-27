@@ -1,0 +1,8 @@
+[Unit]
+Description=MedOps PostgreSQL Database Backup
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/tev/Projects/medops
+ExecStart=/usr/bin/bash /home/tev/Projects/medops/scripts/backup.sh
+TimeoutStartSec=300

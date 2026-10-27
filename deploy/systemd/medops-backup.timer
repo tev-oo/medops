@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily MedOps PostgreSQL Backup
+
+[Timer]
+OnCalendar=*-*-* 20:00:00 Africa/Nairobi
+Persistent=true
+AccuracySec=1min
+Unit=medops-backup.service
+
+[Install]
+WantedBy=timers.target
