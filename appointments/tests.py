@@ -110,3 +110,13 @@ class AppointmentAPITests(TestCase):
         response = self.client.get("/api/appointments/")
 
         self.assertEqual(response.status_code, 403)
+
+    def test_appointment_string_representation(self):
+        appointment = Appointment.objects.create(
+            **self.valid_data
+        )
+
+        self.assertIn(
+            "Jane Example",
+            str(appointment)
+        )

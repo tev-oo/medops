@@ -14,7 +14,7 @@ permissions:
 jobs:
   test:
     name: Django Tests - PostgreSQL
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -65,12 +65,22 @@ jobs:
       - name: Run migrations
         run: python manage.py migrate --noinput
 
-      - name: Run automated tests
-        run: python manage.py test appointments -v 2
+      - name: Run tests with coverage
+        run: |
+          coverage run manage.py test appointments -v 2
+          coverage report -m --fail-under=90
+          coverage xml -o coverage.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: medops-coverage
+          path: coverage.xml
+          if-no-files-found: error
 
   docker:
     name: Docker Image Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository

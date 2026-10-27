@@ -12,3 +12,8 @@ __pycache__/
 .venv/
 *.sqlite3
 __pycache__/
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/

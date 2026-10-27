@@ -1,0 +1,13 @@
+[run]
+source = appointments
+branch = True
+omit =
+    */tests.py
+    */migrations/*
+    */admin.py
+    */apps.py
+
+[report]
+show_missing = True
+skip_empty = True
+precision = 2
