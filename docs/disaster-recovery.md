@@ -84,6 +84,32 @@ docker compose exec -T db pg_restore --list \
 
 This verifies that PostgreSQL can read the archive's table of contents. It is not a substitute for a complete restoration test.
 
+### Backup retention policy
+
+MedOps uses a configurable count-based backup retention policy.
+
+- **Retention count:** Seven most recent successfully created backup archives.
+- **Schedule:** Daily at 20:00 Africa/Nairobi.
+- **Implementation:** `scripts/backup.sh` invokes `scripts/prune-backups.sh`.
+- **Configuration:** systemd environment variables `BACKUP_KEEP_COUNT=7` and `BACKUP_PRUNE_DRY_RUN=0`.
+- **Safety:** Pruning runs only after a new PostgreSQL dump has been created and its archive structure validated.
+
+The backup directory is restricted to `700`, and backup archives have permissions `600`.
+
+**Retention limitations**
+
+The policy retains seven archives, not necessarily seven calendar days. Additional manual backups can shorten the available recovery history.
+
+Backup retention does not replace off-host storage. Losing the VM or its underlying disk could destroy both the database and local backup archives.
+
+**Retention verification — October 28, 2026**
+
+The backup retention implementation was tested using disposable archives, first in dry-run mode and then with actual deletion enabled.
+
+The integrated systemd workflow was also tested against eight PostgreSQL archives. The dry run correctly identified the oldest archive for removal. Subsequent verification showed seven remaining archives, with protected filesystem permissions.
+
+Ansible configuration verification completed with `changed=0` and `failed=0`.
+
 ## 4. Restore procedure — isolated test database
 
 **Safety:** Never restore a test archive into the operational `medops` database. Use a new, empty database.
