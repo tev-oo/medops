@@ -20,3 +20,6 @@ htmlcov/
 
 # PostgreSQL backups
 backups/
+
+# Vagrant local state
+.vagrant/
