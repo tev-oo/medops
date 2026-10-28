@@ -206,6 +206,83 @@ This verifies recovery of the tested appointment records within the same Postgre
 - Preserve a known-good archive before attempting destructive recovery actions.
 - Avoid placing secrets or real patient information in GitHub documentation.
 
+## Off-VM Backup Replication and Recovery
+
+### Architecture
+
+MedOps uses two backup storage locations:
+
+- **Debian 13 VM:** `/opt/medops/backups`
+- **Arch Linux host:** `/home/tev/medops-offsite-backups`
+
+The Debian VM creates PostgreSQL archives using `medops-backup.service`, scheduled daily at 20:00 Africa/Nairobi.
+
+The Arch workstation runs `medops-sync.service`, scheduled daily at 20:15 Africa/Nairobi, to copy the latest backup through SSH.
+
+The synchronization script, `scripts/sync-backups.sh`, verifies the transferred archive using SHA-256 before publishing it under its final filename.
+
+Existing backup files are not silently overwritten.
+
+### Off-VM recovery procedure
+
+Run the following commands from the Arch Linux workstation in the MedOps project directory.
+
+Select a verified backup:
+
+```bash
+cd ~/Projects/medops
+BACKUP="$HOME/medops-offsite-backups/medops-20261028T132515Z.dump"
+test -s "$BACKUP"
+```
+
+Create a new, empty recovery database using PostgreSQL inside the Debian VM:
+
+```bash
+vagrant ssh -c 'cd /opt/medops && sudo docker compose exec -T db sh -c '"'"'createdb -U "$POSTGRES_USER" medops_offvm_restore'"'"''
+```
+
+Only create this database if it does not already exist. Never overwrite the operational `medops` database during a recovery exercise.
+
+Stream the archive directly from Arch into PostgreSQL:
+
+```bash
+ssh -F .vagrant/ssh-config default \
+  'cd /opt/medops && sudo docker compose exec -T db sh -c '"'"'pg_restore -U "$POSTGRES_USER" -d medops_offvm_restore --no-owner --no-privileges --exit-on-error'"'"'' \
+  < "$BACKUP"
+```
+
+Verify the restored appointment records and migration history before considering the recovery successful.
+
+### Verified recovery exercise — October 28, 2026
+
+**Backup:** `medops-20261028T132515Z.dump`
+
+**Recovery database:** `medops_offvm_restore`
+
+| Validation | Result |
+|---|---|
+| SSH backup transfer | Successful |
+| SHA-256 transfer integrity | Passed |
+| PostgreSQL restore | Successful |
+| Appointment records recovered | 3 |
+| Django migration records | 19 |
+| Appointment content integrity | Matching checksum |
+
+**Appointment checksum:** `01071de83ef68c750ea15f5bba6bf5c6`
+
+The source and recovered database contained identical appointment counts and row-content checksums during the exercise.
+
+### Recovery limitations
+
+- The Arch host and Debian VM share the same physical workstation and underlying storage.
+- The current replication script copies only the latest available backup.
+- Synchronization requires the VM to be available through Vagrant SSH.
+- Scheduled execution has been configured and manually tested; successful unattended execution should be monitored.
+- No independent cloud or remote-site backup location is configured yet.
+- A full VM rebuild and database recovery onto a newly provisioned VM has not yet been tested.
+
+The next improvement is encrypted backup replication to an independent storage location, followed by a complete recovery exercise from that location.
+
 ## 7. Future improvements
 
 - Introduce an automated backup retention policy.
