@@ -1,0 +1,31 @@
+---
+- name: Verify MedOps development environment
+  hosts: medops_local
+  gather_facts: true
+
+  tasks:
+    - name: Display operating system
+      ansible.builtin.debug:
+        msg: "Operating system: {{ ansible_facts['distribution'] }}"
+
+    - name: Display available memory
+      ansible.builtin.debug:
+        msg: "Memory: {{ ansible_facts['memtotal_mb'] }} MB"
+
+    - name: Check Docker installation
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Display Docker version
+      ansible.builtin.debug:
+        var: docker_version.stdout
+
+    - name: Check Docker Compose
+      ansible.builtin.command: docker compose version
+      register: compose_version
+      changed_when: false
+
+    - name: Display Docker Compose version
+      ansible.builtin.debug:
+        var: compose_version.stdout
