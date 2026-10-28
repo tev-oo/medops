@@ -1,0 +1,77 @@
+
+---
+- name: Configure MedOps PostgreSQL backups
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    medops_dir: /opt/medops
+
+  tasks:
+    - name: Verify backup script exists
+      ansible.builtin.stat:
+        path: "{{ medops_dir }}/scripts/backup.sh"
+      register: backup_script
+
+    - name: Require MedOps backup script
+      ansible.builtin.assert:
+        that:
+          - backup_script.stat.exists
+        fail_msg: "Deploy MedOps source before configuring backups."
+
+    - name: Create protected backup directory
+      ansible.builtin.file:
+        path: "{{ medops_dir }}/backups"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Install systemd backup service
+      ansible.builtin.template:
+        src: ../templates/medops-backup.service.j2
+        dest: /etc/systemd/system/medops-backup.service
+        owner: root
+        group: root
+        mode: "0644"
+      register: backup_service
+
+    - name: Install systemd backup timer
+      ansible.builtin.template:
+        src: ../templates/medops-backup.timer.j2
+        dest: /etc/systemd/system/medops-backup.timer
+        owner: root
+        group: root
+        mode: "0644"
+      register: backup_timer
+
+    - name: Reload systemd configuration
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+      when: backup_service.changed or backup_timer.changed
+
+    - name: Enable and start backup timer
+      ansible.builtin.systemd_service:
+        name: medops-backup.timer
+        enabled: true
+        state: started
+
+    - name: Verify timer is enabled
+      ansible.builtin.command:
+        cmd: systemctl is-enabled medops-backup.timer
+      register: timer_enabled
+      changed_when: false
+
+    - name: Verify timer is active
+      ansible.builtin.command:
+        cmd: systemctl is-active medops-backup.timer
+      register: timer_active
+      changed_when: false
+
+    - name: Display timer status
+      ansible.builtin.debug:
+        msg:
+          - "Enabled: {{ timer_enabled.stdout }}"
+          - "Active: {{ timer_active.stdout }}"
+

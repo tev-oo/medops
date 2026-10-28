@@ -1,0 +1,12 @@
+[Unit]
+Description=MedOps PostgreSQL Database Backup
+Requires=docker.service
+After=docker.service
+ConditionPathExists={{ medops_dir }}/compose.yaml
+
+[Service]
+Type=oneshot
+WorkingDirectory={{ medops_dir }}
+ExecStart=/usr/bin/bash {{ medops_dir }}/scripts/backup.sh
+TimeoutStartSec=300
+UMask=0077
