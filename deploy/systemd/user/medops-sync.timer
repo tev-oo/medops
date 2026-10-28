@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily MedOps Off-VM Backup Synchronization
+
+[Timer]
+OnCalendar=*-*-* 20:15:00 Africa/Nairobi
+Persistent=true
+AccuracySec=1min
+Unit=medops-sync.service
+
+[Install]
+WantedBy=timers.target

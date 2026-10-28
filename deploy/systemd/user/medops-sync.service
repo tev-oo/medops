@@ -1,0 +1,11 @@
+[Unit]
+Description=MedOps Off-VM PostgreSQL Backup Synchronization
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/tev/Projects/medops
+ExecStart=/usr/bin/bash /home/tev/Projects/medops/scripts/sync-backups.sh
+TimeoutStartSec=300
+UMask=0077
