@@ -23,3 +23,6 @@ backups/
 
 # Vagrant local state
 .vagrant/
+
+# Local Ansible deployment secrets
+/ansible/secrets/

@@ -1,0 +1,43 @@
+
+---
+- name: Configure MedOps lab environment
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    medops_dir: /opt/medops
+
+  tasks:
+    - name: Verify application source exists
+      ansible.builtin.stat:
+        path: "{{ medops_dir }}/compose.yaml"
+      register: compose_file
+
+    - name: Require deployed application
+      ansible.builtin.assert:
+        that:
+          - compose_file.stat.exists
+        fail_msg: "Deploy MedOps source before configuring it."
+
+    - name: Deploy lab environment configuration
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../secrets/medops.env"
+        dest: "{{ medops_dir }}/.env"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Validate Docker Compose configuration
+      ansible.builtin.command:
+        cmd: docker compose config --quiet
+        chdir: "{{ medops_dir }}"
+      register: compose_validation
+      changed_when: false
+      no_log: true
+
+    - name: Confirm configuration validation
+      ansible.builtin.debug:
+        msg: "MedOps environment deployed and Compose configuration valid."
+

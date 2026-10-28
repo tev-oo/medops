@@ -1,0 +1,58 @@
+
+---
+- name: Start MedOps application on Debian
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    medops_dir: /opt/medops
+    medops_build_policy: policy
+
+  tasks:
+    - name: Verify environment file exists
+      ansible.builtin.stat:
+        path: "{{ medops_dir }}/.env"
+      register: medops_env
+
+    - name: Require environment configuration
+      ansible.builtin.assert:
+        that:
+          - medops_env.stat.exists
+        fail_msg: "Run configure-medops.yml first."
+
+    - name: Start MedOps services
+      community.docker.docker_compose_v2:
+        project_src: "{{ medops_dir }}"
+        state: present
+        build: "{{ medops_build_policy }}"
+        wait: true
+        wait_timeout: 180
+
+    - name: Apply Django database migrations
+      ansible.builtin.command:
+        cmd: docker compose exec -T web python manage.py migrate --noinput
+        chdir: "{{ medops_dir }}"
+      register: migration_result
+      changed_when: "'Applying ' in migration_result.stdout"
+
+    - name: Verify no migrations remain pending
+      ansible.builtin.command:
+        cmd: docker compose exec -T web python manage.py migrate --check
+        chdir: "{{ medops_dir }}"
+      changed_when: false
+
+    - name: Verify Django health endpoint
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8000/api/health/
+        method: GET
+        status_code: 200
+      register: medops_health
+      retries: 10
+      delay: 3
+      until: medops_health.status == 200
+
+    - name: Display deployment result
+      ansible.builtin.debug:
+        msg: "MedOps deployed, migrations verified, API healthy."
+

@@ -1,0 +1,60 @@
+
+---
+- name: Deploy MedOps application source
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    medops_repo: "https://github.com/tev-oo/medops.git"
+    medops_version: "17f768d"
+    medops_dir: "/opt/medops"
+
+  tasks:
+    - name: Verify Debian operating system
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == "Debian"
+          - ansible_facts['distribution_major_version'] == "13"
+        fail_msg: "This deployment targets Debian 13."
+
+    - name: Install Git
+      ansible.builtin.apt:
+        name: git
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ medops_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Checkout MedOps source code
+      ansible.builtin.git:
+        repo: "{{ medops_repo }}"
+        dest: "{{ medops_dir }}"
+        version: "{{ medops_version }}"
+        update: true
+
+    - name: Verify deployment directory
+      ansible.builtin.stat:
+        path: "{{ medops_dir }}/compose.yaml"
+      register: medops_compose
+
+    - name: Assert Compose configuration exists
+      ansible.builtin.assert:
+        that:
+          - medops_compose.stat.exists
+        fail_msg: "MedOps Compose configuration not found."
+
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "Deployment directory: {{ medops_dir }}"
+          - "Git revision: {{ medops_version }}"
+          - "Compose configuration found."
+
