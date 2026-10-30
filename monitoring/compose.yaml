@@ -1,4 +1,24 @@
 services:
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    restart: unless-stopped
+
+    command:
+      - --datasource.uri=db:5432/postgres?sslmode=disable
+      - --datasource.pass-file=/run/secrets/pg_monitor_password
+
+    environment:
+      DATA_SOURCE_USER: medops_monitor
+
+    volumes:
+      - /opt/medops-secrets/pg_monitor_password:/run/secrets/pg_monitor_password:ro
+
+    networks:
+      - default
+      - medops-app
+
+    mem_limit: 128m
+  
   prometheus:
     image: prom/prometheus:latest
     restart: unless-stopped
@@ -54,3 +74,8 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+
+networks:
+  medops-app:
+    external: true
+    name: medops_default
