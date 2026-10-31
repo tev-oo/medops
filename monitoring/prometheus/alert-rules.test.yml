@@ -1,0 +1,105 @@
+
+rule_files:
+  - alert-rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # Test 1: Django API unavailable
+  - name: Django downtime
+    interval: 1m
+    input_series:
+      - series: 'up{job="medops-django"}'
+        values: '0+0x7'
+
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: MedOpsDjangoDown
+        exp_alerts: []
+
+      - eval_time: 2m
+        alertname: MedOpsDjangoDown
+        exp_alerts:
+          - exp_labels:
+              job: medops-django
+              severity: critical
+              service: django
+            exp_annotations:
+              summary: "MedOps Django API is down"
+              description: "Prometheus has been unable to scrape the Django API for more than 2 minutes."
+
+  # Test 2: PostgreSQL exporter unavailable
+  - name: PostgreSQL exporter downtime
+    interval: 1m
+    input_series:
+      - series: 'up{job="medops-postgres"}'
+        values: '0+0x7'
+
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: MedOpsPostgreSQLDown
+        exp_alerts: []
+
+      - eval_time: 2m
+        alertname: MedOpsPostgreSQLDown
+        exp_alerts:
+          - exp_labels:
+              job: medops-postgres
+              severity: critical
+              service: postgresql
+            exp_annotations:
+              summary: "MedOps PostgreSQL monitoring reports an outage"
+              description: "The PostgreSQL exporter is unreachable or reports the database as unavailable for more than 2 minutes."
+
+  # Test 3: Database unavailable but exporter running
+  - name: PostgreSQL database downtime
+    interval: 1m
+    input_series:
+      - series: 'up{job="medops-postgres"}'
+        values: '1+0x7'
+      - series: 'pg_up{job="medops-postgres"}'
+        values: '0+0x7'
+
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: MedOpsPostgreSQLDown
+        exp_alerts: []
+
+      - eval_time: 2m
+        alertname: MedOpsPostgreSQLDown
+        exp_alerts:
+          - exp_labels:
+              job: medops-postgres
+              severity: critical
+              service: postgresql
+            exp_annotations:
+              summary: "MedOps PostgreSQL monitoring reports an outage"
+              description: "The PostgreSQL exporter is unreachable or reports the database as unavailable for more than 2 minutes."
+
+  # Test 4: Root filesystem above 85%
+  - name: Root disk usage high
+    interval: 1m
+    input_series:
+      - series: 'node_filesystem_size_bytes{job="medops-node",mountpoint="/",fstype="ext4"}'
+        values: '100+0x8'
+      - series: 'node_filesystem_avail_bytes{job="medops-node",mountpoint="/",fstype="ext4"}'
+        values: '10+0x8'
+
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: MedOpsDiskUsageHigh
+        exp_alerts: []
+
+      - eval_time: 5m
+        alertname: MedOpsDiskUsageHigh
+        exp_alerts:
+          - exp_labels:
+              job: medops-node
+              mountpoint: /
+              fstype: ext4
+              severity: warning
+              service: infrastructure
+            exp_annotations:
+              summary: "MedOps root filesystem usage is above 85%"
+              description: "The Debian server root filesystem has exceeded 85% usage for more than 5 minutes."
+
