@@ -30,9 +30,14 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
 
+    networks:
+      - default
+      - medops-app
+
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
+      - /opt/medops-secrets/medops_metrics_token:/run/secrets/medops_metrics_token:ro
 
     mem_limit: 512m
 

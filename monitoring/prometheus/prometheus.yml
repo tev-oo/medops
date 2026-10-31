@@ -17,3 +17,14 @@ scrape_configs:
     static_configs:
       - targets:
           - postgres-exporter:9187
+
+  - job_name: medops-django
+    metrics_path: /metrics
+
+    authorization:
+      type: Bearer
+      credentials_file: /run/secrets/medops_metrics_token
+
+    static_configs:
+      - targets:
+          - web:8000
