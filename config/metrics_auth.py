@@ -29,7 +29,7 @@ class MetricsAuthMiddleware:
         if (
             not expected
             or not supplied.startswith(prefix)
-            or not hmac.compare_digest(supplied[len(prefix):], expected)
+            or not hmac.compare_digest(supplied[len(prefix) :], expected)
         ):
             return HttpResponseNotFound()
 

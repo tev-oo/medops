@@ -95,3 +95,27 @@ jobs:
       - name: Build Docker image
         run: docker build -t medops:ci .
 
+  prometheus:
+    name: Prometheus Alert Rules
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate Prometheus alert rules
+        run: |
+          docker run --rm \
+            --entrypoint /bin/promtool \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.15.1 \
+            check rules /etc/prometheus/alert-rules.yml
+
+      - name: Test Prometheus alert conditions
+        run: |
+          docker run --rm \
+            --entrypoint /bin/promtool \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.15.1 \
+            test rules /etc/prometheus/alert-rules.test.yml
+
