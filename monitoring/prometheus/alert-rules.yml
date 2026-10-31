@@ -1,0 +1,52 @@
+
+groups:
+  - name: medops-availability
+    rules:
+      - alert: MedOpsDjangoDown
+        expr: up{job="medops-django"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: django
+        annotations:
+          summary: "MedOps Django API is down"
+          description: "Prometheus has been unable to scrape the Django API for more than 2 minutes."
+
+      - alert: MedOpsPostgreSQLDown
+        expr: |
+          (up{job="medops-postgres"} == 0)
+          or (pg_up{job="medops-postgres"} == 0)
+        for: 2m
+        labels:
+          severity: critical
+          service: postgresql
+        annotations:
+          summary: "MedOps PostgreSQL monitoring reports an outage"
+          description: "The PostgreSQL exporter is unreachable or reports the database as unavailable for more than 2 minutes."
+
+  - name: medops-capacity
+    rules:
+      - alert: MedOpsDiskUsageHigh
+        expr: |
+          100 * (
+            1 -
+            node_filesystem_avail_bytes{
+              job="medops-node",
+              mountpoint="/",
+              fstype="ext4"
+            }
+            /
+            node_filesystem_size_bytes{
+              job="medops-node",
+              mountpoint="/",
+              fstype="ext4"
+            }
+          ) > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "MedOps root filesystem usage is above 85%"
+          description: "The Debian server root filesystem has exceeded 85% usage for more than 5 minutes."
+

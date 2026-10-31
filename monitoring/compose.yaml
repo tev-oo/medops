@@ -38,6 +38,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
       - /opt/medops-secrets/medops_metrics_token:/run/secrets/medops_metrics_token:ro
+      - ./prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
 
     mem_limit: 512m
 
