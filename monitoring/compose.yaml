@@ -3,12 +3,10 @@ services:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     restart: unless-stopped
 
-    command:
-      - --datasource.uri=db:5432/postgres?sslmode=disable
-      - --datasource.pass-file=/run/secrets/pg_monitor_password
-
     environment:
-      DATA_SOURCE_USER: medops_monitor
+      DATA_SOURCE_URI: "db:5432/postgres?sslmode=disable"
+      DATA_SOURCE_USER: "medops_monitor"
+      DATA_SOURCE_PASS_FILE: "/run/secrets/pg_monitor_password"
 
     volumes:
       - /opt/medops-secrets/pg_monitor_password:/run/secrets/pg_monitor_password:ro
