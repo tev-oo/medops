@@ -13,6 +13,10 @@ services:
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
+      - /opt/medops-secrets/gmail_app_password:/run/secrets/gmail_app_password:ro
+
+    group_add:
+      - "65534"
 
     mem_limit: 128m
   postgres-exporter:
